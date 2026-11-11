@@ -39,7 +39,7 @@ A conta tem cadastro, login e recuperação de senha por código. As senhas são
 | Maven | 3.10.0 (baixado pelo `mvnw`, não precisa instalar) |
 | JJWT (tokens JWT) | 0.13.0 |
 | MySQL Connector/J | 9.7.0 |
-| Banco de dados | MariaDB 10.4.32 do XAMPP (também funciona com MySQL 8.0.16 ou mais novo) |
+| Banco de dados | MySQL 8.0.16 ou mais novo (ou MariaDB 10.4 ou mais novo) |
 | H2 (só nos testes) | 2.4.240 |
 
 ## Como rodar
@@ -48,13 +48,13 @@ A conta tem cadastro, login e recuperação de senha por código. As senhas são
 
 - [Node.js](https://nodejs.org/) 24 ou mais novo
 - [Java](https://adoptium.net/) 17 ou mais novo
-- [XAMPP](https://www.apachefriends.org/) (para o MySQL) ou um MySQL 8
+- [MySQL](https://dev.mysql.com/downloads/) 8 ou mais novo
 
 ### 2. Ligar o banco
 
-No painel do XAMPP, clique em **Start** na linha do **MySQL**.
+Deixe o MySQL rodando.
 
-O back-end se conecta em `localhost:3306` com o usuário `root` e **senha vazia**, que é o padrão do XAMPP. Se o seu MySQL tem senha, defina a variável `DB_PASSWORD` antes de iniciar o back-end (veja [Configuração](#configuração)).
+O back-end se conecta em `localhost:3306` com o usuário `root` e **senha vazia**. Se o seu MySQL tem senha, defina a variável `DB_PASSWORD` antes de iniciar o back-end (veja [Configuração](#configuração)).
 
 Não é preciso criar o banco nem as tabelas: na primeira vez que o back-end sobe, ele cria o banco `bloom` e todas as tabelas sozinho.
 
@@ -83,7 +83,7 @@ Abra http://localhost:4200, crie uma conta e pronto.
 
 ### Testes
 
-O teste do back-end sobe a API com um banco H2 em memória (no modo MySQL), então não precisa do XAMPP ligado:
+O teste do back-end sobe a API com um banco H2 em memória (no modo MySQL), então não precisa do MySQL ligado:
 
 ```bash
 cd backend
@@ -115,7 +115,7 @@ Algumas coisas sobre o script:
 - Os ids dos registros vêm do próprio app (`Date.now()`), por isso a chave de cada tabela é `(usuario_id, id)`.
 - Todas as tabelas ligadas a `usuarios` usam `ON DELETE CASCADE`: se uma conta for apagada, os dados dela vão junto.
 - As regras de valor (valores positivos, dia de 1 a 31, parcelas pagas até o total…) estão em `CHECK`s.
-- A categoria dos gastos **não** tem `CHECK` no banco, porque o MariaDB do XAMPP estraga os acentos de "Alimentação", "Saúde" etc. dentro dele. Quem confere a categoria é o back-end (`DataService`).
+- A categoria dos gastos **não** tem `CHECK` no banco, porque algumas versões do MariaDB estragam os acentos de "Alimentação", "Saúde" etc. dentro dele. Quem confere a categoria é o back-end (`DataService`).
 
 Para ver as contas cadastradas:
 
@@ -123,17 +123,9 @@ Para ver as contas cadastradas:
 SELECT nome, email, criado_em FROM bloom.usuarios;
 ```
 
-### Fotos e GIFs grandes
-
-O app aceita imagens de até 5 MB, mas o MySQL do XAMPP só aceita 1 MB por envio. Para não dar erro ao salvar uma imagem grande, aumente o limite:
-
-1. No painel do XAMPP, clique em **Config** na linha do MySQL e abra o **my.ini**.
-2. Logo abaixo de `[mysqld]`, troque `max_allowed_packet=1M` por `max_allowed_packet=64M`.
-3. Salve e reinicie o MySQL (**Stop** e depois **Start**).
-
 ## Configuração
 
-Tudo tem um valor padrão que funciona no XAMPP. Para mudar, defina a variável de ambiente antes de rodar `npm run backend`.
+Tudo tem um valor padrão. Para mudar, defina a variável de ambiente antes de rodar `npm run backend`.
 
 | Variável | Padrão | Uso |
 |---|---|---|
