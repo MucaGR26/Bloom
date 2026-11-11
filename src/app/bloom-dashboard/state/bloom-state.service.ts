@@ -392,8 +392,19 @@ export class BloomStateService {
 
   /** Preenche a conta com dados fictícios para apresentação. */
   loadSampleData(): void {
-    const m = this.monthKey;
-    this.salary.set(2200);
+    const now = new Date();
+    const today = now.getDate();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const monthPrefix = this.monthKey;
+    /** Data deste mês, n dias atrás (sem sair do mês). */
+    const daysAgo = (n: number) => `${monthPrefix}-${String(Math.max(1, today - n)).padStart(2, '0')}`;
+    /** Dia do mês daqui a n dias (volta ao começo se passar do fim do mês). */
+    const dayIn = (n: number) => ((today - 1 + n) % lastDay) + 1;
+    /** Parcela que vence daqui a n dias; se o dia já passou neste mês, a deste mês fica como paga. */
+    const dueIn = (n: number) =>
+      today + n > lastDay ? { dueDay: dayIn(n), lastPaidMonth: monthPrefix, paidInLastMonth: 1 } : { dueDay: dayIn(n) };
+
+    this.salary.set(2600);
     this.savingsGoal.set(350);
     this.fixedExpenses.set([
       { id: 1, name: 'Aluguel', amount: 780 },
@@ -402,12 +413,17 @@ export class BloomStateService {
     ]);
     this.expenses.set([
       { id: 1, description: 'Mercado do bairro', category: 'Alimentação', amount: 86.4, date: todayIso() },
-      { id: 2, description: 'Recarga transporte', category: 'Transporte', amount: 40, date: `${m}-02` },
-      { id: 3, description: 'Streaming', category: 'Assinaturas', amount: 21.9, date: `${m}-03` },
-      { id: 4, description: 'Farmácia', category: 'Saúde', amount: 34.5, date: `${m}-04` },
-      { id: 5, description: 'Cinema', category: 'Lazer', amount: 52, date: `${m}-05` },
+      { id: 2, description: 'Recarga transporte', category: 'Transporte', amount: 40, date: daysAgo(1) },
+      { id: 3, description: 'Streaming', category: 'Assinaturas', amount: 21.9, date: daysAgo(2) },
+      { id: 4, description: 'Farmácia', category: 'Saúde', amount: 34.5, date: daysAgo(4) },
+      { id: 5, description: 'Cinema', category: 'Lazer', amount: 52, date: daysAgo(6) },
     ]);
-    this.installments.set([{ id: 1, description: 'Notebook', installmentAmount: 189.9, paidCount: 4, totalCount: 10 }]);
+    // Parcelas com dia de pagamento e cor, para aparecerem no calendário do menu.
+    this.installments.set([
+      { id: 1, description: 'Notebook', installmentAmount: 189.9, paidCount: 4, totalCount: 10, color: '#7c5cff', ...dueIn(3) },
+      { id: 2, description: 'Celular', installmentAmount: 120, paidCount: 2, totalCount: 12, color: '#22a06b', ...dueIn(8) },
+      { id: 3, description: 'Curso de inglês', installmentAmount: 95, paidCount: 4, totalCount: 6, color: '#f59e0b', ...dueIn(15) },
+    ]);
     this.debts.set([
       { id: 1, creditor: 'Cartão de crédito', totalAmount: 1450, paidAmount: 620, interestRate: 8.9, monthlyPayment: 240, dueDay: 3 },
       { id: 2, creditor: 'Empréstimo pessoal', totalAmount: 2800, paidAmount: 900, interestRate: 3.2, monthlyPayment: 310, dueDay: 15 },
@@ -416,11 +432,15 @@ export class BloomStateService {
       { id: 1, name: 'Viagem para o litoral', icon: 'sparkles', targetAmount: 1500, savedAmount: 620, targetDate: 'Jan 2027' },
       { id: 2, name: 'Fundo de emergência', icon: 'flag', targetAmount: 2000, savedAmount: 300, targetDate: 'Dez 2027' },
     ]);
+    // Dois lembretes vencem em até 7 dias (aba Importante) e dois depois (aba Pagamentos futuros).
     this.reminders.set([
-      { id: 1, name: 'Internet', amount: 89.9, dueDay: 28, category: 'Assinaturas', paid: false },
-      { id: 2, name: 'Cartão de crédito', amount: 240, dueDay: 3, category: 'Dívida', paid: false },
-      { id: 3, name: 'Energia', amount: 118.6, dueDay: 7, category: 'Moradia', paid: false },
+      { id: 1, name: 'Água', amount: 64.3, dueDay: dayIn(2), category: 'Moradia', paid: false },
+      { id: 2, name: 'Cartão de crédito', amount: 240, dueDay: dayIn(5), category: 'Dívida', paid: false },
+      { id: 3, name: 'Internet', amount: 89.9, dueDay: dayIn(14), category: 'Assinaturas', paid: false },
+      { id: 4, name: 'Energia', amount: 118.6, dueDay: dayIn(22), category: 'Moradia', paid: false },
+      { id: 5, name: 'Academia', amount: 99.9, dueDay: dayIn(10), category: 'Saúde', paid: true },
     ]);
+    this.emergencyMode.set(false);
   }
 
   // ----- conselho -----

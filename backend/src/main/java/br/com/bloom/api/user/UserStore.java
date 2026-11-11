@@ -2,7 +2,7 @@ package br.com.bloom.api.user;
 
 import java.util.Optional;
 
-/** Onde as contas ficam guardadas. Hoje em arquivo JSON; o MySQL entra como outra implementação. */
+/** Onde as contas ficam guardadas (MySQL, em MySqlUserStore). */
 public interface UserStore {
 
     Optional<User> findById(String id);
