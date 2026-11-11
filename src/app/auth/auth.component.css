@@ -1,0 +1,67 @@
+/* A tela de login tem visual próprio, independente do tema escolhido dentro do app. */
+.auth-page {
+  --bloom-pink: rgb(243 77 126);
+  --bloom-pink-dark: rgb(214 52 101);
+}
+
+.link {
+  color: var(--bloom-pink-dark);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  color: var(--bloom-pink);
+}
+
+.field-wrap {
+  position: relative;
+  display: block;
+  margin-top: 8px;
+}
+
+.field {
+  display: block;
+  width: 100%;
+  height: 42px;
+  padding: 0 40px 0 12px;
+  border: 1px solid #d6d4da;
+  border-radius: 4px;
+  background: #fff;
+  color: #1f1d24;
+  font-size: 15px;
+  outline: none;
+}
+
+.field:focus {
+  border-color: var(--bloom-pink);
+  box-shadow: 0 0 0 3px rgb(243 77 126 / 0.18);
+}
+
+.field-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translateY(-50%);
+  color: #8d8a93;
+  pointer-events: none;
+}
+
+.remember {
+  accent-color: var(--bloom-pink-dark);
+}
+
+.submit {
+  background: var(--bloom-pink-dark);
+}
+
+.submit:hover {
+  background: var(--bloom-pink);
+}
+
+/* Lado direito: o rosa do logo, liso. */
+.side-panel {
+  background: var(--bloom-pink);
+}

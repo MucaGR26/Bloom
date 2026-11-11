@@ -1,0 +1,28 @@
+<div class="mb-7">
+  <p class="mb-1 text-sm font-semibold text-primary">SUPORTE</p>
+  <h2 class="font-display text-4xl leading-none sm:text-5xl">Como podemos <em class="text-primary not-italic">ajudar?</em></h2>
+</div>
+
+<h3 class="mb-3 text-lg font-extrabold">Perguntas frequentes</h3>
+<div class="overflow-hidden rounded-lg border border-border bg-card bloom-shadow">
+  @for (item of FAQ; track item.question; let i = $index) {
+    <details class="group" [class.border-t]="i > 0" [class.border-border]="i > 0">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-4 text-sm font-bold hover:bg-muted sm:px-5">
+        {{ item.question }}
+        <app-icon name="chevronDown" class="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+      </summary>
+      <p class="px-4 pb-4 text-sm text-muted-foreground sm:px-5">{{ item.answer }}</p>
+    </details>
+  }
+</div>
+
+<div class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6">
+  <div>
+    <h3 class="text-lg font-extrabold">Ainda com dúvida?</h3>
+    <p class="mt-1 text-sm text-muted-foreground">Fale com a gente no WhatsApp ou pergunte ao Conselho.</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a [href]="whatsappLink" target="_blank" rel="noopener noreferrer" class="rounded-md bg-[#25d366] px-4 py-2 text-sm font-bold text-black hover:bg-[#1ebe5b]">Falar no WhatsApp</a>
+    <a routerLink="/conselho" class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">Abrir o Conselho</a>
+  </div>
+</div>

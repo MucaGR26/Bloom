@@ -1,0 +1,128 @@
+<div class="mb-7 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <p class="mb-1 text-sm font-semibold text-primary">LEMBRETES</p>
+    <h2 class="font-display text-4xl leading-none sm:text-5xl">Contas para <em class="text-primary not-italic">não esquecer</em></h2>
+  </div>
+  <button (click)="formOpen.set(!formOpen())" class="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+    <app-icon name="plus" class="size-4" /> Novo lembrete
+  </button>
+</div>
+
+@if (formOpen()) {
+  <form #reminderForm (submit)="$event.preventDefault(); submit(reminderForm)" class="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4 bloom-shadow">
+    <label class="min-w-[160px] flex-1 text-xs font-bold">Descrição
+      <input name="name" required placeholder="Ex.: Água" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+    </label>
+    <label class="w-28 text-xs font-bold">Valor
+      <input name="amount" required inputmode="decimal" placeholder="0,00" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+    </label>
+    <label class="w-20 text-xs font-bold">Dia
+      <input name="dueDay" required type="number" min="1" max="31" placeholder="5" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+    </label>
+    <label class="w-36 text-xs font-bold">Categoria
+      <select name="category" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-ring">
+        @for (cat of categories; track cat) { <option [value]="cat">{{ cat }}</option> }
+      </select>
+    </label>
+    <button type="submit" class="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">Salvar</button>
+  </form>
+}
+
+<div class="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Separar lembretes">
+  <ng-container *ngTemplateOutlet="tabButton; context: { id: 'importante', label: 'Importante', count: important().length }" />
+  <ng-container *ngTemplateOutlet="tabButton; context: { id: 'futuros', label: 'Pagamentos futuros', count: future().length }" />
+  <ng-container *ngTemplateOutlet="tabButton; context: { id: 'noticias', label: 'Notícias', count: 0 }" />
+</div>
+
+@switch (tab()) {
+  @case ('importante') {
+    <p class="mb-3 text-sm text-muted-foreground">Contas que vencem nos próximos 7 dias.</p>
+    <div class="overflow-hidden rounded-lg border border-border bg-card bloom-shadow">
+      @for (r of important(); track r.id; let i = $index) {
+        <ng-container *ngTemplateOutlet="row; context: { $implicit: r, i: i }" />
+      } @empty {
+        <p class="p-6 text-center text-sm text-muted-foreground">Nenhuma conta vence nos próximos 7 dias. 🎉</p>
+      }
+    </div>
+  }
+  @case ('futuros') {
+    <p class="mb-3 text-sm text-muted-foreground">Contas que vencem daqui a mais de 7 dias.</p>
+    <div class="overflow-hidden rounded-lg border border-border bg-card bloom-shadow">
+      @for (r of future(); track r.id; let i = $index) {
+        <ng-container *ngTemplateOutlet="row; context: { $implicit: r, i: i }" />
+      } @empty {
+        <p class="p-6 text-center text-sm text-muted-foreground">Nenhum pagamento futuro.</p>
+      }
+    </div>
+  }
+  @case ('noticias') {
+    <p class="mb-4 flex items-center gap-2 rounded-md bg-muted px-4 py-2.5 text-xs font-semibold text-muted-foreground">
+      <app-icon name="alertTriangle" class="size-4 shrink-0" />
+      Notícias fictícias, criadas só para demonstração. Empresas, índices e números são inventados.
+    </p>
+    <div class="grid gap-4 sm:grid-cols-2">
+      @for (n of news; track n.title) {
+        <article class="rounded-lg border border-border bg-card p-5 bloom-shadow">
+          <p class="text-xs font-bold text-primary">{{ n.category }}</p>
+          <h4 class="mt-1 text-sm font-extrabold">{{ n.title }}</h4>
+          <p class="mt-2 text-sm text-muted-foreground">{{ n.summary }}</p>
+        </article>
+      }
+    </div>
+  }
+}
+
+@if (tab() !== 'noticias' && paid().length) {
+  <h3 class="mb-3 mt-8 text-lg font-extrabold">Pagas</h3>
+  <div class="overflow-hidden rounded-lg border border-border bg-card bloom-shadow">
+    @for (r of paid(); track r.id; let i = $index) {
+      <ng-container *ngTemplateOutlet="row; context: { $implicit: r, i: i }" />
+    }
+  </div>
+}
+
+<ng-template #tabButton let-id="id" let-label="label" let-count="count">
+  <button
+    role="tab"
+    [attr.aria-selected]="tab() === id"
+    (click)="tab.set(id)"
+    class="flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold"
+    [class.bg-primary]="tab() === id"
+    [class.text-primary-foreground]="tab() === id"
+    [class.border-primary]="tab() === id"
+    [class.border-border]="tab() !== id"
+    [class.text-muted-foreground]="tab() !== id"
+    [class.hover:bg-muted]="tab() !== id"
+  >
+    {{ label }}
+    @if (count > 0) {
+      <span class="rounded-full bg-black/20 px-1.5 text-[10px]">{{ count }}</span>
+    }
+  </button>
+</ng-template>
+
+<ng-template #row let-r let-i="i">
+  <div class="flex items-center gap-3 p-4 sm:gap-4 sm:px-5" [class.border-t]="i > 0" [class.border-border]="i > 0">
+    <div class="grid size-10 shrink-0 place-items-center rounded-md bg-muted text-sm font-extrabold text-primary">{{ r.dueDay }}</div>
+    <div class="min-w-0 flex-1">
+      <p class="truncate text-sm font-bold" [class.line-through]="r.paid" [class.text-muted-foreground]="r.paid">{{ r.name }}</p>
+      <p class="text-xs text-muted-foreground">{{ r.category }} · {{ r.paid ? 'Pago' : dueLabel(r) }}</p>
+    </div>
+    <p class="whitespace-nowrap text-sm font-bold" [class.text-muted-foreground]="r.paid">{{ state.formatMoney(r.amount) }}</p>
+    <button
+      (click)="state.toggleReminder(r.id)"
+      class="grid size-8 shrink-0 place-items-center rounded-full border"
+      [class.bg-positive]="r.paid"
+      [class.border-positive]="r.paid"
+      [class.text-white]="r.paid"
+      [class.border-border]="!r.paid"
+      [class.text-muted-foreground]="!r.paid"
+      [attr.aria-label]="r.paid ? 'Marcar como pendente' : 'Marcar como pago'"
+    >
+      <app-icon name="check" class="size-4" />
+    </button>
+    <button (click)="remove(r)" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-primary" [attr.aria-label]="'Excluir ' + r.name">
+      <app-icon name="trash" class="size-4" />
+    </button>
+  </div>
+</ng-template>

@@ -1,0 +1,54 @@
+<div class="mb-7 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <p class="mb-1 text-sm font-semibold text-primary">HISTÓRICO</p>
+    <h2 class="font-display text-4xl leading-none sm:text-5xl">Tudo o que <em class="text-primary not-italic">saiu</em></h2>
+  </div>
+  <div class="flex flex-wrap items-center gap-3">
+    <span class="flex items-center gap-2 text-sm text-muted-foreground">
+      <app-icon name="filter" class="size-4" /> {{ filteredExpenses().length }} lançamentos · − {{ state.formatMoney(filteredTotal()) }}
+    </span>
+    <button (click)="state.openDialog()" class="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+      <app-icon name="plus" class="size-4" /> Novo gasto
+    </button>
+  </div>
+</div>
+
+<div class="mb-5 flex flex-wrap gap-2">
+  @for (cat of categories(); track cat) {
+    <button
+      (click)="setFilter(cat)"
+      class="rounded-full border px-4 py-1.5 text-xs font-bold"
+      [class.bg-primary]="categoryFilter() === cat"
+      [class.text-primary-foreground]="categoryFilter() === cat"
+      [class.border-primary]="categoryFilter() === cat"
+      [class.border-border]="categoryFilter() !== cat"
+      [class.text-muted-foreground]="categoryFilter() !== cat"
+      [class.hover:bg-muted]="categoryFilter() !== cat"
+    >
+      {{ cat }}
+    </button>
+  }
+</div>
+
+<div class="overflow-hidden rounded-lg border border-border bg-card bloom-shadow">
+  @for (e of filteredExpenses(); track e.id; let i = $index) {
+    <div class="flex items-center gap-3 p-4 sm:gap-4 sm:px-5" [class.border-t]="i > 0" [class.border-border]="i > 0">
+      <div class="hidden size-10 shrink-0 place-items-center rounded-md bg-muted text-primary sm:grid"><app-icon name="coin" class="size-[19px]" /></div>
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-sm font-bold">{{ e.description }}</p>
+        <p class="text-xs text-muted-foreground">{{ e.category }} · {{ formatDate(e.date) }}</p>
+      </div>
+      <p class="whitespace-nowrap text-sm font-extrabold">− {{ state.formatMoney(e.amount) }}</p>
+      <div class="flex shrink-0">
+        <button (click)="state.openDialog(e)" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-primary" [attr.aria-label]="'Editar ' + e.description">
+          <app-icon name="pencil" class="size-4" />
+        </button>
+        <button (click)="remove(e)" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-primary" [attr.aria-label]="'Excluir ' + e.description">
+          <app-icon name="trash" class="size-4" />
+        </button>
+      </div>
+    </div>
+  } @empty {
+    <p class="p-6 text-center text-sm text-muted-foreground">Nenhum gasto nessa categoria ainda.</p>
+  }
+</div>

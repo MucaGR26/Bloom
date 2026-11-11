@@ -1,0 +1,239 @@
+<div class="mb-7">
+  <p class="mb-1 text-sm font-semibold text-primary">TEMAS E PREFERÊNCIAS</p>
+  <h2 class="font-display text-4xl leading-none sm:text-5xl">Deixe o app com a <em class="text-primary not-italic">sua cara</em></h2>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-2">
+  <div class="rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6 xl:col-span-2">
+    <h3 class="text-lg font-extrabold">Foto de perfil</h3>
+    <div class="mt-4 flex flex-wrap items-center gap-5">
+      @if (state.preferences().photo) {
+        <img [src]="state.preferences().photo" alt="Sua foto de perfil" class="size-20 rounded-full object-cover">
+      } @else {
+        <div class="grid size-20 place-items-center rounded-full bg-primary text-3xl font-bold text-primary-foreground">
+          {{ (state.preferences().displayName || '?').charAt(0).toUpperCase() }}
+        </div>
+      }
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="h-10 cursor-pointer rounded-md bg-primary px-4 text-sm font-medium leading-10 text-primary-foreground hover:bg-primary/90">
+          {{ state.preferences().photo ? 'Trocar foto' : 'Escolher foto' }}
+          <input #photoInput type="file" accept="image/*" class="sr-only" (change)="onImageSelected(photoInput, 'photo')">
+        </label>
+        @if (state.preferences().photo) {
+          <button (click)="removeImage('photo')" class="h-10 rounded-md border border-border px-4 text-sm font-bold hover:bg-muted">Remover</button>
+        }
+      </div>
+    </div>
+    @if (photoError()) {
+      <p class="mt-3 text-sm font-semibold text-primary" role="alert">{{ photoError() }}</p>
+    }
+  </div>
+
+  <form #namesForm (submit)="$event.preventDefault(); saveNames(namesForm)" class="rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6">
+    <h3 class="text-lg font-extrabold">Nomes</h3>
+    <label class="mt-4 block text-xs font-bold">Como quer ser chamado(a)?
+      <input name="displayName" [placeholder]="state.preferences().displayName || 'Seu nome'" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+    </label>
+    <label class="mt-4 block text-xs font-bold">Nome do aplicativo
+      <input name="appName" maxlength="20" [placeholder]="state.preferences().appName" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+    </label>
+    <div class="mt-4 flex items-center gap-3">
+      <button type="submit" class="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">Salvar</button>
+      @if (saved()) { <span class="text-sm font-bold text-positive">Salvo!</span> }
+    </div>
+  </form>
+
+  <div class="rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6">
+    <h3 class="text-lg font-extrabold">Aparência</h3>
+    <div class="mt-4 inline-flex rounded-md border border-border p-1" role="group" aria-label="Modo claro ou escuro">
+      @for (m of ['claro', 'escuro']; track m) {
+        <button
+          (click)="setMode($any(m))"
+          class="rounded px-5 py-2 text-sm font-bold capitalize"
+          [class.bg-primary]="state.preferences().mode === m"
+          [class.text-primary-foreground]="state.preferences().mode === m"
+          [class.text-muted-foreground]="state.preferences().mode !== m"
+          [attr.aria-pressed]="state.preferences().mode === m"
+        >{{ m === 'claro' ? '☀ Claro' : '☾ Escuro' }}</button>
+      }
+    </div>
+
+    <p class="mt-6 text-sm font-bold">Cor do tema</p>
+    <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      @for (t of COLORS; track t.name) {
+        <button
+          (click)="setTheme(t.name)"
+          class="flex items-center gap-3 rounded-md border-2 p-3 text-left text-sm font-bold hover:bg-muted"
+          [class.border-primary]="state.preferences().theme === t.name"
+          [class.border-border]="state.preferences().theme !== t.name"
+          [attr.aria-pressed]="state.preferences().theme === t.name"
+        >
+          <span class="size-6 shrink-0 rounded-full" [style.background]="t.primary"></span>
+          {{ t.label }}
+          @if (state.preferences().theme === t.name) { <app-icon name="check" class="ml-auto size-4 text-primary" /> }
+        </button>
+      }
+      <label
+        class="flex cursor-pointer items-center gap-3 rounded-md border-2 p-3 text-sm font-bold hover:bg-muted"
+        [class.border-primary]="state.preferences().theme === 'personalizada'"
+        [class.border-border]="state.preferences().theme !== 'personalizada'"
+      >
+        <input
+          type="color"
+          [value]="state.preferences().customColor"
+          (input)="setCustomColor($any($event.target).value)"
+          class="size-6 shrink-0 cursor-pointer rounded-full border-0 bg-transparent p-0"
+          aria-label="Escolher cor personalizada"
+        >
+        Outra cor…
+        @if (state.preferences().theme === 'personalizada') { <app-icon name="check" class="ml-auto size-4 text-primary" /> }
+      </label>
+    </div>
+  </div>
+
+  <div class="rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6 xl:col-span-2">
+    <h3 class="text-lg font-extrabold">Banner do topo</h3>
+    <p class="mt-1 text-sm text-muted-foreground">Escolha um fundo para a barra do "Olá" ou deixe como está.</p>
+    <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      <button
+        (click)="state.updatePreferences({ headerBanner: '' })"
+        class="overflow-hidden rounded-md border-2 text-left"
+        [class.border-primary]="!state.preferences().headerBanner"
+        [class.border-border]="!!state.preferences().headerBanner"
+        [attr.aria-pressed]="!state.preferences().headerBanner"
+      >
+        <div class="flex h-14 items-center border-b border-border bg-card px-3 text-xs font-extrabold">Olá!</div>
+        <p class="flex items-center justify-between px-3 py-2 text-xs font-bold">
+          Padrão
+          @if (!state.preferences().headerBanner) { <app-icon name="check" class="size-3.5 text-primary" /> }
+        </p>
+      </button>
+      @for (b of BANNERS; track b.id) {
+        <button
+          (click)="state.updatePreferences({ headerBanner: b.id })"
+          class="overflow-hidden rounded-md border-2 text-left"
+          [class.border-primary]="state.preferences().headerBanner === b.id"
+          [class.border-border]="state.preferences().headerBanner !== b.id"
+          [attr.aria-pressed]="state.preferences().headerBanner === b.id"
+        >
+          <div class="flex h-14 items-center px-3 text-xs font-extrabold text-white" [style.background]="b.background">Olá!</div>
+          <p class="flex items-center justify-between px-3 py-2 text-xs font-bold">
+            {{ b.label }}
+            @if (state.preferences().headerBanner === b.id) { <app-icon name="check" class="size-3.5 text-primary" /> }
+          </p>
+        </button>
+      }
+
+      <!-- Último quadrado: imagem/GIF do próprio usuário -->
+      @if (state.preferences().headerImage; as img) {
+        <div
+          class="overflow-hidden rounded-md border-2"
+          [class.border-primary]="state.preferences().headerBanner === 'imagem'"
+          [class.border-border]="state.preferences().headerBanner !== 'imagem'"
+        >
+          <button
+            (click)="state.updatePreferences({ headerBanner: 'imagem' })"
+            class="flex h-14 w-full items-center px-3 text-xs font-extrabold text-white"
+            [style.background]="imageBanner(img).background"
+            [attr.aria-pressed]="state.preferences().headerBanner === 'imagem'"
+            aria-label="Usar minha imagem no topo"
+          >Olá!</button>
+          <div class="flex items-center justify-between gap-1 px-3 py-2 text-xs font-bold">
+            <span class="flex items-center gap-1">
+              Imagem
+              @if (state.preferences().headerBanner === 'imagem') { <app-icon name="check" class="size-3.5 text-primary" /> }
+            </span>
+            <span class="flex items-center gap-1">
+              <label class="cursor-pointer rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary" title="Trocar imagem">
+                <app-icon name="pencil" class="size-3.5" />
+                <input #bannerInput type="file" accept="image/*" class="sr-only" (change)="onImageSelected(bannerInput, 'headerImage')" aria-label="Trocar imagem do topo">
+              </label>
+              <button (click)="removeImage('headerImage')" class="rounded p-1 text-muted-foreground hover:bg-muted hover:text-primary" aria-label="Remover imagem do topo">
+                <app-icon name="trash" class="size-3.5" />
+              </button>
+            </span>
+          </div>
+        </div>
+      } @else {
+        <label class="flex cursor-pointer flex-col overflow-hidden rounded-md border-2 border-dashed border-border text-left hover:border-primary hover:bg-muted">
+          <span class="flex h-14 items-center justify-center gap-2 text-xs font-bold text-muted-foreground">
+            <app-icon name="plus" class="size-4" /> Carregar imagem
+          </span>
+          <span class="px-3 py-2 text-xs font-bold">Imagem</span>
+          <input #bannerInput type="file" accept="image/*" class="sr-only" (change)="onImageSelected(bannerInput, 'headerImage')" aria-label="Carregar imagem para o topo">
+        </label>
+      }
+    </div>
+    @if (bannerError()) {
+      <p class="mt-3 text-sm font-semibold text-primary" role="alert">{{ bannerError() }}</p>
+    }
+    <p class="mt-3 text-xs text-muted-foreground">Imagens são reduzidas automaticamente. GIFs animados funcionam (até 5 MB).</p>
+  </div>
+
+  <div class="rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6 xl:col-span-2">
+    <h3 class="text-lg font-extrabold">Tema de ícones</h3>
+    <p class="mt-1 text-sm text-muted-foreground">Muda o estilo dos ícones do menu e do app.</p>
+    <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      @for (t of iconThemes(); track t.id) {
+        <button
+          (click)="setIconTheme(t.id)"
+          class="rounded-md border-2 p-3 text-left hover:bg-muted"
+          [class.border-primary]="state.preferences().iconTheme === t.id"
+          [class.border-border]="state.preferences().iconTheme !== t.id"
+          [attr.aria-pressed]="state.preferences().iconTheme === t.id"
+        >
+          <div class="flex h-9 items-center gap-1">
+            @for (icon of PREVIEW_ICONS; track icon; let i = $index) {
+              @if (t.id === 'colorido') {
+                <span class="grid size-6 shrink-0 place-items-center rounded-md text-white" [style.background]="PREVIEW_COLORS[i]">
+                  <app-icon [name]="icon" theme="padrao" class="size-3.5" />
+                </span>
+              } @else {
+                <app-icon [name]="icon" [theme]="t.id" class="size-5" />
+              }
+            }
+          </div>
+          <p class="mt-3 flex items-center justify-between text-sm font-bold">
+            <span class="flex items-center gap-1.5">
+              {{ t.label }}
+              @if (t.id === 'aventura') { <app-icon name="plus" theme="aventura" class="size-4" /> }
+            </span>
+            @if (state.preferences().iconTheme === t.id) { <app-icon name="check" theme="padrao" class="size-4 text-primary" /> }
+          </p>
+          <p class="text-xs text-muted-foreground">{{ t.description }}</p>
+        </button>
+      }
+    </div>
+    @if (secretMessage()) {
+      <p class="mt-4 flex items-center gap-2 rounded-md border border-primary bg-muted px-4 py-3 text-sm font-bold" role="status">
+        <app-icon name="plus" theme="aventura" class="size-5 shrink-0" /> {{ secretMessage() }}
+      </p>
+    }
+  </div>
+
+  <div class="rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6 xl:col-span-2">
+    <h3 class="text-lg font-extrabold">Dados de exemplo</h3>
+    <p class="mt-1 text-sm text-muted-foreground">Preenche sua conta com salário, gastos, dívidas e sonhos fictícios — útil para apresentar o projeto.</p>
+    <button (click)="loadSample()" class="mt-4 h-10 rounded-md border border-border px-4 text-sm font-bold hover:bg-muted">Carregar dados de exemplo</button>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6 xl:col-span-2">
+    <div>
+      <h3 class="text-lg font-extrabold">Som da sirene</h3>
+      <p class="mt-1 text-sm text-muted-foreground">Toca quando você fica no vermelho, até ativar o Modo Emergência.</p>
+    </div>
+    <button
+      type="button"
+      role="switch"
+      [attr.aria-checked]="alarmOn()"
+      aria-label="Som da sirene"
+      (click)="state.updatePreferences({ alarmSound: !alarmOn() })"
+      class="flex items-center gap-3 text-sm font-bold"
+    >
+      <span class="relative h-7 w-12 rounded-full transition-colors" [class.bg-primary]="alarmOn()" [class.bg-muted]="!alarmOn()">
+        <span class="absolute top-1 size-5 rounded-full bg-white transition-all" [class.left-6]="alarmOn()" [class.left-1]="!alarmOn()"></span>
+      </span>
+      {{ alarmOn() ? 'Ligado' : 'Desligado' }}
+    </button>
+  </div>
+</div>

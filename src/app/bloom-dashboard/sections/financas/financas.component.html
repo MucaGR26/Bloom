@@ -1,0 +1,85 @@
+<div class="mb-7">
+  <p class="mb-1 text-sm font-semibold text-primary">FINANÇAS</p>
+  <h2 class="font-display text-4xl leading-none sm:text-5xl">Salário, contas fixas e <em class="text-primary not-italic">meta</em></h2>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-[1fr_1fr]">
+  <div class="space-y-6">
+    <form #valuesForm (submit)="$event.preventDefault(); saveValues(valuesForm)" class="rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6">
+      <h3 class="text-lg font-extrabold">Salário e meta de poupança</h3>
+      <div class="mt-4 grid gap-3 sm:grid-cols-2">
+        <label class="text-xs font-bold">Salário mensal
+          <input name="salary" inputmode="decimal" [placeholder]="state.formatMoney(state.salary())" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+        </label>
+        <label class="text-xs font-bold">Meta de poupança mensal
+          <input name="goal" inputmode="decimal" [placeholder]="state.formatMoney(state.savingsGoal())" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+        </label>
+      </div>
+      <button type="submit" class="mt-4 h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">Salvar</button>
+    </form>
+
+    <div class="rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6">
+      <h3 class="text-lg font-extrabold">Despesas fixas</h3>
+      <p class="text-sm text-muted-foreground">Contas que se repetem todo mês (aluguel, luz, internet…)</p>
+
+      <form #fixedForm (submit)="$event.preventDefault(); addFixed(fixedForm)" class="mt-4 flex flex-wrap items-end gap-3">
+        <label class="min-w-[140px] flex-1 text-xs font-bold">Descrição
+          <input name="name" placeholder="Ex.: Aluguel" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+        </label>
+        <label class="w-28 text-xs font-bold">Valor
+          <input name="amount" inputmode="decimal" placeholder="0,00" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+        </label>
+        <button type="submit" class="flex h-10 items-center gap-1 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+          <app-icon name="plus" class="size-4" /> Adicionar
+        </button>
+      </form>
+
+      <div class="mt-4">
+        @for (f of state.fixedExpenses(); track f.id; let i = $index) {
+          <div class="flex items-center gap-3 py-3" [class.border-t]="i > 0" [class.border-border]="i > 0">
+            <div class="grid size-9 shrink-0 place-items-center rounded-md bg-muted text-primary"><app-icon name="receipt" class="size-4" /></div>
+            <p class="min-w-0 flex-1 truncate text-sm font-bold">{{ f.name }}</p>
+            <p class="whitespace-nowrap text-sm font-bold">{{ state.formatMoney(f.amount) }}</p>
+            <button (click)="state.removeFixedExpense(f.id)" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-primary" [attr.aria-label]="'Excluir ' + f.name">
+              <app-icon name="trash" class="size-4" />
+            </button>
+          </div>
+        } @empty {
+          <p class="py-3 text-sm text-muted-foreground">Nenhuma despesa fixa cadastrada.</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="h-fit rounded-lg border border-border bg-card p-5 bloom-shadow sm:p-6">
+    <h3 class="text-lg font-extrabold">Resumo do mês</h3>
+    <dl class="mt-4 space-y-3 text-sm">
+      <div class="flex justify-between"><dt class="text-muted-foreground">Salário</dt><dd class="font-bold">{{ state.formatMoney(state.salary()) }}</dd></div>
+      <div class="flex justify-between"><dt class="text-muted-foreground">Despesas fixas</dt><dd class="font-bold">− {{ state.formatMoney(state.fixedTotal()) }}</dd></div>
+      <div class="flex justify-between"><dt class="text-muted-foreground">Parcelas</dt><dd class="font-bold">− {{ state.formatMoney(state.installmentsTotalMonthly()) }}</dd></div>
+      <div class="flex justify-between"><dt class="text-muted-foreground">Dívidas</dt><dd class="font-bold">− {{ state.formatMoney(state.debtsMonthlyTotal()) }}</dd></div>
+      <div class="flex justify-between"><dt class="text-muted-foreground">Gastos avulsos</dt><dd class="font-bold">− {{ state.formatMoney(state.variableTotal()) }}</dd></div>
+      <div class="flex justify-between border-t border-border pt-3 text-base">
+        <dt class="font-bold">Disponível</dt>
+        <dd class="font-extrabold" [class.text-primary]="state.available() < 0">{{ state.formatMoney(state.available()) }}</dd>
+      </div>
+    </dl>
+
+    <div class="mt-6 rounded-md bg-muted p-4">
+      <div class="flex justify-between text-sm">
+        <span class="font-semibold">Poupado no mês</span>
+        <span class="font-extrabold text-primary">{{ state.formatMoney(state.saved()) }}</span>
+      </div>
+      <div class="mt-3 h-2 overflow-hidden rounded-full bg-background">
+        <div class="h-full rounded-full bg-primary transition-all" [style.width.%]="state.goalProgress()"></div>
+      </div>
+      <p class="mt-2 text-xs text-muted-foreground">
+        @if (state.savingsGoal() > 0) {
+          {{ state.goalProgress() }}% da meta de {{ state.formatMoney(state.savingsGoal()) }}
+        } @else {
+          Defina uma meta de poupança para acompanhar o progresso.
+        }
+      </p>
+    </div>
+  </div>
+</div>

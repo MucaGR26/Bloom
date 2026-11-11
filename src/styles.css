@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/*
+ * Temas: a cor (--h, --primary, --secondary) é aplicada no <html> pelo applyTheme()
+ * em state/theme.ts. Aqui ficam só as variáveis derivadas e o modo escuro (data-mode).
+ */
+:root {
+  --h: 354;
+  --primary: oklch(0.62 0.245 354);
+  --secondary: oklch(0.62 0.105 180);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --accent: oklch(0.92 0.045 var(--h));
+  --accent-foreground: oklch(0.3 0.08 var(--h));
+  --background: oklch(0.975 0.008 var(--h));
+  --foreground: oklch(0.16 0.02 285);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --secondary-foreground: oklch(0.99 0 0);
+  --muted: oklch(0.94 0.012 var(--h));
+  --muted-foreground: oklch(0.48 0.026 285);
+  --border: oklch(0.89 0.018 var(--h));
+  --input: var(--border);
+  --ring: var(--primary);
+  --sidebar: oklch(0.13 0.018 285);
+  --sidebar-foreground: oklch(0.95 0.01 var(--h));
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.23 0.03 285);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.3 0.025 285);
+  --positive: oklch(0.6 0.13 164);
+  --ink: oklch(0.13 0.018 285);
+  --ink-soft: oklch(0.22 0.028 var(--h));
+  color-scheme: light;
+}
+
+/* Modo escuro neutro: página, cards e campos no mesmo tom; só a cor do tema dá destaque. */
+:root[data-mode="escuro"] {
+  --accent: oklch(0.24 0 0);
+  --accent-foreground: oklch(0.96 0 0);
+  --background: oklch(0.16 0 0);
+  --foreground: oklch(0.96 0 0);
+  --card: var(--background);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.7 0 0);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --sidebar: var(--background);
+  --sidebar-foreground: oklch(0.96 0 0);
+  --sidebar-accent: oklch(0.22 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --positive: oklch(0.72 0.14 164);
+  --ink: oklch(0.2 0 0);
+  --ink-soft: oklch(0.26 0 0);
+  color-scheme: dark;
+}
+
+:root[data-mode="escuro"] .bloom-shadow {
+  box-shadow: none;
+}
+
+/* No escuro a sidebar fica separada da página só pela borda. */
+:root[data-mode="escuro"] aside {
+  border-right: 1px solid var(--sidebar-border);
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-positive: var(--positive);
+  --font-sans: "Manrope", sans-serif;
+  --font-display: "DM Serif Display", serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  margin: 0;
+  font-family: "Manrope", sans-serif;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+input,
+select {
+  color: inherit;
+}
+
+.balance-surface {
+  background:
+    radial-gradient(circle at 92% 115%, color-mix(in oklab, var(--primary) 70%, transparent) 0 15%, transparent 15.5%),
+    radial-gradient(circle at 92% 115%, transparent 0 24%, color-mix(in oklab, var(--secondary) 45%, transparent) 24.5% 25%, transparent 25.5%),
+    linear-gradient(120deg, var(--ink), var(--ink-soft));
+  color: oklch(0.99 0 0);
+}
+
+.bloom-shadow {
+  box-shadow: 0 18px 50px -30px color-mix(in oklab, var(--foreground) 35%, transparent);
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 9999px;
+}
+input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 9999px;
+}

@@ -1,0 +1,51 @@
+/* Cores e temas ficam em src/styles.css. */
+:host {
+  display: block;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Barra lateral fechada: só vale no computador; no celular ela já abre e fecha pelo menu. */
+@media (min-width: 1024px) {
+  .sidebar-closed {
+    display: none !important;
+  }
+}
+
+/* Só o calendário rola; o menu e a parte de baixo da barra ficam parados. */
+.calendar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-accent) transparent;
+}
+
+/* Janelas baixas: menu mais compacto, para sobrar espaço para o calendário. */
+@media (min-width: 1024px) and (max-height: 820px) {
+  aside nav {
+    margin-top: 16px;
+  }
+
+  aside nav a {
+    height: 36px;
+  }
+
+  .calendar-scroll {
+    margin-block: 12px;
+  }
+}
+
+/* Aba Emergência quando a pessoa fica no vermelho. */
+.emergency-alert {
+  font-weight: 700;
+  animation: emergency-blink 1s ease-in-out infinite;
+}
+
+@keyframes emergency-blink {
+  0%, 100% {
+    background-color: rgb(239 68 68);
+    color: #fff;
+  }
+  50% {
+    background-color: rgb(239 68 68 / 0.15);
+    color: rgb(252 165 165);
+  }
+}

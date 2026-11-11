@@ -1,0 +1,84 @@
+<div class="mb-7 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <p class="mb-1 text-sm font-semibold text-primary">SONHOS</p>
+    <h2 class="font-display text-4xl leading-none sm:text-5xl">Pelo que você está <em class="text-primary not-italic">economizando</em></h2>
+  </div>
+  <button (click)="formOpen.set(!formOpen())" class="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+    <app-icon name="plus" class="size-4" /> Novo sonho
+  </button>
+</div>
+
+@if (formOpen()) {
+  <form #dreamForm (submit)="$event.preventDefault(); submit(dreamForm)" class="mb-6 flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4 bloom-shadow">
+    <label class="min-w-[160px] flex-1 text-xs font-bold">Nome do sonho
+      <input name="name" required placeholder="Ex.: Viagem" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+    </label>
+    <label class="w-32 text-xs font-bold">Valor-meta
+      <input name="target" required inputmode="decimal" placeholder="0,00" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+    </label>
+    <label class="w-36 text-xs font-bold">Prazo (opcional)
+      <input name="date" placeholder="Ex.: Dez 2027" class="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+    </label>
+    <button type="submit" class="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">Salvar</button>
+  </form>
+}
+
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+  @for (dream of state.dreams(); track dream.id) {
+    <div class="overflow-hidden rounded-lg border border-border bg-card bloom-shadow">
+      @if (dream.image) {
+        <div class="relative h-36">
+          <img [src]="dream.image" [alt]="'Foto de ' + dream.name" class="size-full object-cover">
+          <div class="absolute right-2 top-2 flex gap-1.5">
+            <label class="cursor-pointer rounded-md bg-black/50 px-2.5 py-1.5 text-xs font-bold text-white backdrop-blur hover:bg-black/70">
+              Trocar foto
+              <input #changeImage type="file" accept="image/*" class="sr-only" (change)="onImageSelected(dream, changeImage)" [attr.aria-label]="'Trocar foto de ' + dream.name">
+            </label>
+            <button (click)="state.setDreamImage(dream.id, null)" class="rounded-md bg-black/50 p-1.5 text-white backdrop-blur hover:bg-black/70" [attr.aria-label]="'Remover foto de ' + dream.name">
+              <app-icon name="x" class="size-3.5" />
+            </button>
+          </div>
+        </div>
+      }
+      <div class="p-5">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="grid size-10 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground"><app-icon [name]="dream.icon" class="size-[18px]" /></div>
+          <div class="min-w-0">
+            <p class="truncate text-sm font-bold">{{ dream.name }}</p>
+            <p class="text-xs text-muted-foreground">{{ dream.savedAmount >= dream.targetAmount ? 'Concluído 🎉' : dream.targetDate }}</p>
+          </div>
+        </div>
+        <div class="flex shrink-0">
+          @if (!dream.image) {
+            <label class="cursor-pointer rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-primary" title="Colocar foto">
+              <app-icon name="image" class="size-4" />
+              <input #newImage type="file" accept="image/*" class="sr-only" (change)="onImageSelected(dream, newImage)" [attr.aria-label]="'Colocar foto em ' + dream.name">
+            </label>
+          }
+          <button (click)="remove(dream)" class="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-primary" [attr.aria-label]="'Excluir ' + dream.name">
+            <app-icon name="trash" class="size-4" />
+          </button>
+        </div>
+      </div>
+      <div class="mt-4 h-2 overflow-hidden rounded-full bg-muted">
+        <div class="h-full rounded-full bg-primary transition-all" [style.width.%]="progressOf(dream.savedAmount, dream.targetAmount)"></div>
+      </div>
+      <div class="mt-2 flex justify-between text-xs">
+        <span class="font-bold text-primary">{{ state.formatMoney(dream.savedAmount) }} · {{ progressOf(dream.savedAmount, dream.targetAmount) }}%</span>
+        <span class="text-muted-foreground">de {{ state.formatMoney(dream.targetAmount) }}</span>
+      </div>
+      @if (dream.savedAmount < dream.targetAmount) {
+        <p class="mt-1 text-xs text-muted-foreground">Faltam {{ state.formatMoney(dream.targetAmount - dream.savedAmount) }}</p>
+      }
+      <div class="mt-4 flex gap-2">
+        <input #amount inputmode="decimal" placeholder="Valor" [attr.aria-label]="'Valor para ' + dream.name" class="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+        <button (click)="deposit(dream, amount, 1)" class="h-9 rounded-md bg-primary px-3 text-xs font-bold text-primary-foreground hover:bg-primary/90">Guardar</button>
+        <button (click)="deposit(dream, amount, -1)" class="h-9 rounded-md border border-border px-3 text-xs font-bold hover:bg-muted">Retirar</button>
+      </div>
+      </div>
+    </div>
+  } @empty {
+    <p class="text-sm text-muted-foreground">Nenhum sonho cadastrado ainda — que tal criar o primeiro?</p>
+  }
+</div>

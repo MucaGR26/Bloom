@@ -1,0 +1,74 @@
+<div class="mb-7 flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <p class="mb-1 text-sm font-semibold text-primary">MODO EMERGÊNCIA</p>
+    <h2 class="font-display text-4xl leading-none sm:text-5xl">Um plano para <em class="text-primary not-italic">respirar</em></h2>
+  </div>
+  <button
+    (click)="state.setEmergencyMode(!state.emergencyMode())"
+    class="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-bold"
+    [class.bg-primary]="!state.emergencyMode()"
+    [class.text-primary-foreground]="!state.emergencyMode()"
+    [class.border]="state.emergencyMode()"
+    [class.border-border]="state.emergencyMode()"
+  >
+    <app-icon name="alertTriangle" class="size-4" />
+    {{ state.emergencyMode() ? 'Desativar Modo Emergência' : 'Ativar Modo Emergência' }}
+  </button>
+</div>
+
+@if (state.overBudget()) {
+  <div class="mb-6 rounded-lg border border-primary bg-card p-5 bloom-shadow">
+    <p class="flex items-center gap-2 text-sm font-extrabold text-primary"><app-icon name="alertTriangle" class="size-4" /> Seus gastos passaram do salário</p>
+    <p class="mt-1 text-sm text-muted-foreground">
+      Você gastou {{ state.formatMoney(state.totalSpent()) }} de {{ state.formatMoney(state.salary()) }} — {{ state.formatMoney(-state.available()) }} a mais.
+      @if (!state.emergencyMode()) { O Bloom sugere ativar o Modo Emergência. }
+    </p>
+  </div>
+} @else if (!state.emergencyMode()) {
+  <div class="mb-6 rounded-lg border border-border bg-card p-5 bloom-shadow">
+    <p class="text-sm font-bold">Tudo sob controle por enquanto.</p>
+    <p class="mt-1 text-sm text-muted-foreground">O Bloom avisa quando os gastos do mês passarem do salário. Você também pode ativar o modo manualmente para ver o plano.</p>
+  </div>
+}
+
+@if (state.emergencyMode() || state.overBudget()) {
+  <div class="grid gap-4 lg:grid-cols-3">
+    @for (g of groups(); track g.title) {
+      <div class="rounded-lg border border-border bg-card p-5 bloom-shadow">
+        <div class="flex items-center justify-between">
+          <p class="flex items-center gap-2 text-sm font-extrabold"><app-icon [name]="g.icon" class="size-4 text-primary" /> {{ g.title }}</p>
+          <span class="text-sm font-bold">{{ state.formatMoney(total(g.items)) }}</span>
+        </div>
+        <div class="mt-3">
+          @for (item of g.items; track item.name; let i = $index) {
+            <div class="flex items-center justify-between gap-3 py-2.5" [class.border-t]="i > 0" [class.border-border]="i > 0">
+              <div class="min-w-0">
+                <p class="truncate text-sm font-bold">{{ item.name }}</p>
+                <p class="text-xs text-muted-foreground">{{ item.note }}</p>
+              </div>
+              <p class="whitespace-nowrap text-sm font-semibold">{{ state.formatMoney(item.amount) }}</p>
+            </div>
+          } @empty {
+            <p class="py-2 text-sm text-muted-foreground">{{ g.empty }}</p>
+          }
+        </div>
+      </div>
+    }
+  </div>
+  @if (cutTotal() > 0) {
+    <p class="mt-4 text-sm text-muted-foreground">Cortando o primeiro grupo você libera cerca de <strong class="text-foreground">{{ state.formatMoney(cutTotal()) }}</strong> por mês.</p>
+  }
+}
+
+<div class="mt-6 balance-surface bloom-shadow rounded-lg p-6 sm:p-8">
+  <p class="flex items-center gap-2 text-sm text-white/65"><app-icon name="shield" class="size-4" /> Fundo de emergência sugerido</p>
+  @if (state.salary() > 0) {
+    <p class="mt-2 text-4xl font-extrabold">{{ state.formatMoney(state.emergencyFundIdeal()) }}</p>
+    <p class="mt-3 text-sm text-white/75">
+      O ideal é ter 6 salários guardados. Comece pelo mínimo de {{ state.formatMoney(state.emergencyFundMin()) }} (3 salários) —
+      guardando {{ state.formatMoney(state.salary() * 0.1) }} por mês (10% da renda), você chega lá em cerca de 30 meses.
+    </p>
+  } @else {
+    <p class="mt-2 text-2xl font-extrabold">Informe seu salário para calcular</p>
+  }
+</div>

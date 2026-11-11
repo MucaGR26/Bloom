@@ -1,0 +1,190 @@
+<div class="min-h-screen lg:grid lg:grid-cols-[var(--sidebar-columns)]" [style.--sidebar-columns]="sidebarColumns()">
+  <aside
+    class="fixed inset-0 z-40 flex-col overflow-y-auto bg-sidebar px-5 py-6 text-sidebar-foreground lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-hidden"
+    [class.flex]="state.menuOpen()"
+    [class.hidden]="!state.menuOpen()"
+    [class.sidebar-closed]="sidebarClosed()"
+  >
+    <div class="flex items-center justify-between px-2">
+      <div class="flex min-w-0 items-center gap-3">
+        <button type="button" (click)="logoClicked()" class="shrink-0 rounded-lg" aria-label="Logo">
+          <img [src]="state.preferences().secretLogo ? 'logo-secreto.png' : 'logo.png'" alt="" class="size-9 rounded-lg object-cover">
+        </button>
+
+        <span class="truncate font-display text-3xl italic">{{ state.preferences().appName || 'Bloom' }}</span>
+      </div>
+      <button (click)="state.closeMenu()" class="rounded-md p-2 text-sidebar-foreground hover:bg-sidebar-accent lg:hidden" aria-label="Fechar menu">
+        <app-icon name="x" class="size-5" />
+      </button>
+      <button (click)="closeSidebar()" class="hidden rounded-md p-2 text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground lg:block" aria-label="Fechar barra lateral" title="Fechar barra lateral">
+        <app-icon name="x" class="size-5" />
+      </button>
+    </div>
+
+    <nav class="mt-10 space-y-1">
+      @for (item of NAV; track item.path; let i = $index) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="bg-sidebar-accent !text-sidebar-accent-foreground"
+          [routerLinkActiveOptions]="{ exact: item.path === '/' }"
+          (click)="state.closeMenu()"
+          class="flex h-11 w-full items-center gap-2 rounded-md px-3 text-sm font-medium text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          [class.emergency-alert]="item.path === '/emergencia' && needsEmergency()"
+        >
+          @if (state.preferences().iconTheme === 'colorido') {
+            <span class="grid size-7 shrink-0 place-items-center rounded-lg text-white" [style.background]="NAV_COLORS[i % NAV_COLORS.length]">
+              <app-icon [name]="item.icon" class="size-4" />
+            </span>
+          } @else {
+            <app-icon [name]="item.icon" class="size-4" />
+          }
+          {{ item.label }}
+          @if (item.path === '/emergencia' && state.emergencyMode()) {
+            <span class="ml-auto rounded-full bg-sidebar-primary px-2 py-0.5 text-[10px] font-bold text-sidebar-primary-foreground">ATIVO</span>
+          }
+        </a>
+      }
+    </nav>
+
+    <app-sidebar-calendar class="calendar-scroll my-6 block min-h-28 flex-1 overflow-y-auto px-1 lg:min-h-0" />
+
+    <div class="mt-auto border-t border-sidebar-border pt-5">
+      <a
+        routerLink="/temas"
+        routerLinkActive="bg-sidebar-accent !text-sidebar-accent-foreground"
+        (click)="state.closeMenu()"
+        class="flex h-11 w-full items-center gap-2 rounded-md px-3 text-sm font-medium text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      >
+        <app-icon name="settings" class="size-4" /> Temas e preferências
+      </a>
+      <div class="mt-4 flex items-center gap-3 px-3">
+        <a routerLink="/temas" (click)="state.closeMenu()" class="shrink-0" aria-label="Mudar foto de perfil">
+          @if (state.preferences().photo) {
+            <img [src]="state.preferences().photo" alt="" class="size-9 rounded-full object-cover">
+          } @else {
+            <span class="grid size-9 place-items-center rounded-full bg-sidebar-primary font-bold text-sidebar-primary-foreground">{{ initial() }}</span>
+          }
+        </a>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-semibold">{{ displayName() }}</p>
+          <p class="truncate text-xs text-sidebar-foreground/50">{{ email() }}</p>
+        </div>
+        <button (click)="logout()" class="rounded-md px-2 py-1 text-xs font-bold text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">Sair</button>
+      </div>
+    </div>
+
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Redimensionar barra lateral"
+      title="Arraste para mudar o tamanho. Solte perto da borda para fechar."
+      tabindex="0"
+      (pointerdown)="startSidebarResize($event)"
+      (keydown)="onSidebarResizeKey($event)"
+      (dblclick)="resetSidebarWidth()"
+      class="absolute inset-y-0 right-0 hidden w-1.5 cursor-col-resize touch-none transition-colors hover:bg-sidebar-primary focus-visible:bg-sidebar-primary lg:block"
+    ></div>
+  </aside>
+
+  <main class="min-w-0">
+    <div class="bg-primary px-5 py-2 text-center text-xs font-bold text-primary-foreground sm:text-sm">
+      Seu dinheiro merece florescer no seu ritmo.
+    </div>
+
+    <header
+      class="flex h-20 items-center justify-between border-b border-border px-5 md:px-8 xl:px-12"
+      [class.bg-card]="!banner()"
+      [class.text-white]="!!banner()"
+      [style.background]="banner()?.background ?? null"
+    >
+      <div class="flex min-w-0 items-center gap-3">
+        <button (click)="openSidebar()" class="rounded-md p-2" [class.lg:hidden]="!sidebarClosed()" [class.hover:bg-muted]="!banner()" [class.hover:bg-white/15]="!!banner()" aria-label="Abrir menu">
+          <app-icon name="menu" class="size-5" />
+        </button>
+        <div class="min-w-0">
+          <p class="text-xs font-bold uppercase" [class.text-muted-foreground]="!banner()" [class.text-white/75]="!!banner()">{{ state.monthLabel }}</p>
+          <h1 class="truncate text-xl font-extrabold">Olá, {{ displayName() }}</h1>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a
+          routerLink="/lembretes"
+          class="relative rounded-md border p-2"
+          [class.border-input]="!banner()"
+          [class.hover:bg-accent]="!banner()"
+          [class.border-white/50]="!!banner()"
+          [class.hover:bg-white/15]="!!banner()"
+          aria-label="Ver lembretes"
+        >
+          <app-icon name="bell" class="size-4" />
+          @if (state.pendingReminders().length) {
+            <span class="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{{ state.pendingReminders().length }}</span>
+          }
+        </a>
+        <button
+          (click)="state.openDialog()"
+          class="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium"
+          [class.bg-primary]="!banner()"
+          [class.text-primary-foreground]="!banner()"
+          [class.hover:bg-primary/90]="!banner()"
+          [class.bg-white]="!!banner()"
+          [class.text-black]="!!banner()"
+          [class.hover:bg-white/85]="!!banner()"
+        >
+          <app-icon name="plus" class="size-4" /><span class="hidden sm:inline">Novo gasto</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-[1440px] px-5 py-7 md:px-8 xl:px-12 xl:py-10">
+      <router-outlet />
+    </div>
+  </main>
+</div>
+
+@if (showNegativeNotice()) {
+  <div class="fixed inset-x-4 top-4 z-30 flex items-start gap-3 rounded-lg border-2 border-red-500 bg-card p-4 bloom-shadow sm:left-auto sm:w-96" role="alert">
+    <div class="grid size-10 shrink-0 place-items-center rounded-md bg-red-500 text-white"><app-icon name="alertTriangle" class="size-5" /></div>
+    <div class="min-w-0 flex-1">
+      <p class="text-sm font-extrabold">Você ficou no vermelho</p>
+      <p class="mt-1 text-sm text-muted-foreground">Seus gastos passaram do salário em {{ state.formatMoney(-state.available()) }}. Abra a aba Emergência para ver o plano e escolher se quer ativar.</p>
+      <a routerLink="/emergencia" (click)="dismissNegativeNotice()" class="mt-3 inline-block rounded-md bg-red-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-600">Abrir Emergência</a>
+    </div>
+    <button (click)="dismissNegativeNotice()" class="rounded-md p-1 text-muted-foreground hover:bg-muted" aria-label="Fechar aviso"><app-icon name="x" class="size-4" /></button>
+  </div>
+}
+
+@if (state.dialogOpen()) {
+  <div class="fixed inset-0 z-50 grid place-items-center bg-foreground/55 p-4" role="dialog" aria-modal="true" (keydown.escape)="state.closeDialog()">
+    <form #expenseForm (submit)="$event.preventDefault(); saveExpense(expenseForm)" class="w-full max-w-md rounded-lg bg-card p-6 bloom-shadow">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="text-xs font-bold text-primary">{{ state.editingExpense() ? 'EDITAR LANÇAMENTO' : 'NOVO LANÇAMENTO' }}</p>
+          <h2 class="mt-1 text-2xl font-extrabold">{{ state.editingExpense() ? 'Editar gasto' : 'Registrar gasto' }}</h2>
+        </div>
+        <button type="button" (click)="state.closeDialog()" class="rounded-md p-2 hover:bg-muted" aria-label="Fechar"><app-icon name="x" class="size-4" /></button>
+      </div>
+      <label class="mt-6 block text-sm font-bold">Descrição
+        <input name="description" required autofocus placeholder="Ex.: almoço" [value]="state.editingExpense()?.description ?? ''" class="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 outline-none focus:ring-2 focus:ring-ring">
+      </label>
+      <div class="mt-4 grid grid-cols-2 gap-3">
+        <label class="block text-sm font-bold">Valor
+          <input name="amount" required inputmode="decimal" placeholder="0,00" [value]="state.editingExpense()?.amount ?? ''" class="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 outline-none focus:ring-2 focus:ring-ring">
+        </label>
+        <label class="block text-sm font-bold">Data
+          <input name="date" type="date" [value]="state.editingExpense()?.date ?? today" class="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 outline-none focus:ring-2 focus:ring-ring">
+        </label>
+      </div>
+      <label class="mt-4 block text-sm font-bold">Categoria
+        <select name="category" class="mt-2 h-11 w-full rounded-md border border-input bg-background px-3 outline-none focus:ring-2 focus:ring-ring">
+          @for (cat of categories; track cat) {
+            <option [value]="cat" [selected]="(state.editingExpense()?.category ?? 'Alimentação') === cat">{{ cat }}</option>
+          }
+        </select>
+      </label>
+      <button type="submit" class="mt-6 w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+        {{ state.editingExpense() ? 'Salvar alterações' : 'Adicionar gasto' }}
+      </button>
+    </form>
+  </div>
+}

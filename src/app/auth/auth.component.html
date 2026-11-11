@@ -1,0 +1,121 @@
+<div class="auth-page grid min-h-screen lg:grid-cols-[1fr_minmax(380px,34%)]">
+  <!-- Formulário (direita, fundo claro) -->
+  <section class="flex flex-col bg-white px-6 py-10 text-[#1f1d24] sm:px-12 lg:order-2">
+    <div class="mx-auto flex w-full max-w-[340px] flex-1 flex-col justify-center">
+      <div class="flex items-center justify-center gap-3">
+        <img src="logo.png" alt="" class="size-11">
+        <span class="font-display text-4xl italic">Bloom</span>
+      </div>
+
+      <h1 class="mt-6 text-center text-2xl font-semibold">{{ title }}</h1>
+      <p class="mt-4 text-center text-sm text-[#55525c]">
+        @if (mode === 'login') {
+          Não tem uma conta? <a routerLink="/cadastro" class="link">Criar conta</a>
+        } @else {
+          Já tem uma conta? <a routerLink="/login" class="link">Entrar</a>
+        }
+      </p>
+
+      <form #authForm (submit)="$event.preventDefault(); submit(authForm)" novalidate class="mt-8">
+        @if (mode === 'recover') {
+          @if (!recoverEmail()) {
+            <label class="block text-sm font-bold">E-mail da sua conta
+              <span class="field-wrap">
+                <input name="email" type="email" autocomplete="email" class="field">
+                <app-icon name="mail" theme="padrao" class="field-icon" />
+              </span>
+            </label>
+          } @else {
+            <p class="text-sm text-[#55525c]">Código enviado para <strong class="break-all">{{ recoverEmail() }}</strong>.</p>
+            <label class="mt-5 block text-sm font-bold">Código de 6 dígitos
+              <span class="field-wrap">
+                <input name="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" class="field">
+                <app-icon name="lock" theme="padrao" class="field-icon" />
+              </span>
+            </label>
+            <label class="mt-5 block text-sm font-bold">Nova senha
+              <span class="field-wrap">
+                <input name="password" type="password" autocomplete="new-password" class="field">
+                <app-icon name="lock" theme="padrao" class="field-icon" />
+              </span>
+            </label>
+            <label class="mt-5 block text-sm font-bold">Repita a nova senha
+              <span class="field-wrap">
+                <input name="confirm" type="password" autocomplete="new-password" class="field">
+                <app-icon name="lock" theme="padrao" class="field-icon" />
+              </span>
+            </label>
+          }
+        } @else {
+        @if (mode === 'register') {
+          <label class="mb-5 block text-sm font-bold">Nome
+            <span class="field-wrap">
+              <input name="name" autocomplete="name" class="field">
+              <app-icon name="user" theme="padrao" class="field-icon" />
+            </span>
+          </label>
+        }
+        <label class="block text-sm font-bold">E-mail
+          <span class="field-wrap">
+            <input name="email" type="email" autocomplete="email" class="field">
+            <app-icon name="mail" theme="padrao" class="field-icon" />
+          </span>
+        </label>
+        <label class="mt-5 block text-sm font-bold">Senha
+          <span class="field-wrap">
+            <input name="password" type="password" [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'" class="field">
+            <app-icon name="lock" theme="padrao" class="field-icon" />
+          </span>
+        </label>
+
+        <label class="mt-5 flex w-fit cursor-pointer items-center gap-2 text-sm text-[#3b3842]">
+          <input name="remember" type="checkbox" checked class="remember size-4">
+          Lembrar de mim
+        </label>
+        }
+
+        @if (error() || info()) {
+          <p
+            class="mt-4 rounded-md px-3 py-2 text-sm font-semibold"
+            [style.background]="error() ? '#fdecef' : '#f3f2f5'"
+            [style.color]="error() ? '#c0264f' : '#3b3842'"
+            role="alert"
+          >{{ error() || info() }}</p>
+        }
+
+        <button type="submit" [disabled]="busy()" class="submit mt-6 h-11 w-full rounded-md text-base font-semibold text-white transition disabled:opacity-60">
+          @switch (mode) {
+            @case ('login') { Entrar }
+            @case ('register') { Criar conta }
+            @default { {{ recoverEmail() ? 'Salvar nova senha' : 'Enviar código' }} }
+          }
+        </button>
+
+        @if (mode === 'login') {
+          <p class="mt-5 text-center">
+            <a routerLink="/recuperar-senha" class="link text-sm">Esqueceu sua senha?</a>
+          </p>
+        }
+
+        @if (mode === 'recover' && recoverEmail()) {
+          <p class="mt-5 flex justify-center gap-4 text-sm">
+            <button type="button" [disabled]="busy()" (click)="sendRecoveryCode(recoverEmail())" class="link">Reenviar código</button>
+            <button type="button" (click)="useAnotherEmail()" class="link">Usar outro e-mail</button>
+          </p>
+        }
+      </form>
+    </div>
+
+    <footer class="mx-auto mt-10 max-w-[340px] text-center text-xs leading-relaxed text-[#6b6872]">
+      © {{ year }} Bloom. Desenvolvido por Murilo Gonçalves Rocha.
+    </footer>
+  </section>
+
+  <!-- Ilustração (esquerda) -->
+  <aside class="side-panel relative hidden overflow-hidden lg:order-1 lg:block" aria-hidden="true">
+    <div class="absolute left-1/2 top-1/2 flex w-[58%] max-w-[520px] -translate-x-1/2 -translate-y-1/2 flex-col items-center text-center">
+      <app-animated-logo class="w-full" />
+      <p class="mt-10 font-display text-4xl italic leading-tight text-[#f1ecdc] xl:text-5xl">Seu dinheiro merece florescer no seu ritmo.</p>
+    </div>
+  </aside>
+</div>
