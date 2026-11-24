@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Dados locais antigos (contas de usuários): nunca vão para o git ###
+data/

@@ -23,6 +23,9 @@ export interface PlanItem {
 /** Categorias de gasto avulso que dá pra cortar de imediato numa emergência. */
 const CUTTABLE = ['Lazer', 'Assinaturas', 'Compras', 'Outros'];
 
+/** Tempo de espera antes de salvar, para juntar várias mudanças seguidas em um salvamento só. */
+const SAVE_DELAY_MS = 300;
+
 export function todayIso(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -73,6 +76,10 @@ export class BloomStateService {
 
   // ----- dados do usuário -----
   private loadedFor = signal<string | null>(null);
+  /** Último estado ainda não enviado para a API. */
+  private pendingSave: { email: string; data: BloomData } | null = null;
+  private saveTimer?: ReturnType<typeof setTimeout>;
+  private saving = false;
   salary = signal(0);
   savingsGoal = signal(0);
   fixedExpenses = signal<FixedExpense[]>([]);
@@ -120,13 +127,18 @@ export class BloomStateService {
     });
 
     // Salva a cada alteração (só depois de carregar, para não sobrescrever com dados vazios).
+    // Espera um instante para juntar mudanças seguidas e manda um salvamento de cada vez,
+    // para um salvamento antigo nunca chegar depois de um mais novo e sobrescrevê-lo.
     effect(() => {
       const data = this.snapshot();
       const email = this.loadedFor();
-      if (!email) return;
-      this.repo.save(email, data).then((error) => {
-        if (error) alert(`Não foi possível salvar: ${error}`);
-      });
+      clearTimeout(this.saveTimer);
+      if (!email) {
+        this.pendingSave = null;
+        return;
+      }
+      this.pendingSave = { email, data };
+      this.saveTimer = setTimeout(() => this.flushSave(), SAVE_DELAY_MS);
     });
 
     // Aplica tema e nome do app na página.
@@ -135,6 +147,22 @@ export class BloomStateService {
       applyTheme(prefs);
       document.title = prefs.appName || 'Bloom';
     });
+  }
+
+  /** Envia o último estado pendente. Se já houver um salvamento em andamento, espera ele terminar. */
+  private async flushSave(): Promise<void> {
+    if (this.saving || !this.pendingSave) return;
+    const { email, data } = this.pendingSave;
+    this.pendingSave = null;
+    this.saving = true;
+    try {
+      const error = await this.repo.save(email, data);
+      if (error) alert(`Não foi possível salvar: ${error}`);
+    } finally {
+      this.saving = false;
+      // Chegou mudança nova enquanto salvava: manda agora, já com o estado mais recente.
+      if (this.pendingSave) void this.flushSave();
+    }
   }
 
   private apply(data: BloomData): void {
