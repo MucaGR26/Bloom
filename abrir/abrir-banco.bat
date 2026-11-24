@@ -54,7 +54,11 @@ if not exist "%CNF%" (
     exit /b 1
 )
 
+rem ---- O banco "bloom" so existe enquanto esta janela estiver aberta: ele e apagado ao sair
+rem      e, caso a janela tenha sido fechada no X da ultima vez, apagado de novo aqui antes de criar.
 echo.
+echo Apagando o banco "bloom" anterior, se existir...
+echo DROP DATABASE IF EXISTS bloom; | "%MYSQL%" --defaults-extra-file="%CNF%"
 echo Criando o banco "bloom" e as tabelas (Script do banco\criar_tabelas.sql)...
 "%MYSQL%" --defaults-extra-file="%CNF%" --default-character-set=utf8mb4 < "Script do banco\criar_tabelas.sql"
 if errorlevel 1 (
@@ -70,7 +74,13 @@ echo Abrindo o MySQL no banco "bloom". Exemplos:
 echo    SHOW TABLES;
 echo    SELECT nome, email, criado_em FROM usuarios;
 echo Para sair, digite: exit
+echo ATENCAO: ao sair, o banco "bloom" e todos os dados dele serao apagados.
 echo.
 "%MYSQL%" --defaults-extra-file="%CNF%" --default-character-set=utf8mb4 bloom
+echo.
+echo Apagando o banco "bloom"...
+echo DROP DATABASE IF EXISTS bloom; | "%MYSQL%" --defaults-extra-file="%CNF%"
+if errorlevel 1 (echo Nao foi possivel apagar o banco.) else (echo Banco apagado.)
 del "%CNF%" >nul 2>&1
+timeout /t 3 >nul
 endlocal

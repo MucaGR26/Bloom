@@ -1,7 +1,7 @@
 @echo off
 setlocal
 chcp 65001 >nul
-title Bloom - Iniciar projeto
+title Bloom - Projeto (API + site)
 rem ---- Vai para a pasta do projeto (funciona com o .bat na raiz ou numa subpasta, como "abrir")
 cd /d "%~dp0"
 if not exist "package.json" cd ..
@@ -40,15 +40,37 @@ if not exist "node_modules" (
     echo.
 )
 
-echo Abrindo a API (back-end) em outra janela...
-start "Bloom - API (porta 3000)" cmd /k "npm run backend"
+rem ---- API (back-end): roda escondida nesta mesma janela, com o log num arquivo
+set "LOG=%TEMP%\bloom-api.log"
+echo Iniciando a API (back-end)... o log fica em %LOG%
+start "" /b cmd /c npm run backend ^> "%LOG%" 2^>^&1
 
-echo Abrindo o site (front-end) em outra janela...
-start "Bloom - Site (porta 4200)" cmd /k "npm start -- --open"
+rem ---- Espera a API responder em /api/health (ate uns 2 minutos; a primeira vez demora mais)
+set /a TENTATIVAS=0
+:esperar_api
+ping -n 3 127.0.0.1 >nul
+curl -s -o nul http://localhost:3000/api/health && goto api_ok
+set /a TENTATIVAS+=1
+if %TENTATIVAS% geq 60 goto api_falhou
+goto esperar_api
 
+:api_falhou
 echo.
-echo Pronto! O navegador abre sozinho em http://localhost:4200 quando o site terminar de carregar.
-echo Para parar, feche as janelas "Bloom - API" e "Bloom - Site".
-echo.
+echo A API nao subiu. Ultimas linhas do log:
+echo ----------------------------------------------
+powershell -NoProfile -Command "Get-Content -Tail 25 $env:LOG"
+echo ----------------------------------------------
+echo Confira se o MySQL esta ligado e se o usuario e a senha estao certos.
 pause
+exit /b 1
+
+:api_ok
+echo API no ar em http://localhost:3000
+echo.
+
+rem ---- Site (front-end): roda nesta janela; o navegador abre sozinho
+echo Iniciando o site (front-end)... o navegador abre sozinho em http://localhost:4200
+echo Para parar tudo (site e API), feche esta janela ou aperte Ctrl+C.
+echo.
+call npm start -- --open
 endlocal
